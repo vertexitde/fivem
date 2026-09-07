@@ -98,7 +98,12 @@ void MonoComponentHostShared::Initialize()
 
 #ifndef IS_FXSERVER
 		mono_security_enable_core_clr();
-		mono_security_core_clr_set_options((MonoSecurityCoreCLROptions)(MONO_SECURITY_CORE_CLR_OPTIONS_RELAX_DELEGATE | MONO_SECURITY_CORE_CLR_OPTIONS_RELAX_REFLECTION));
+		// RELAX_DELEGATE stays. BaseScript [Tick]/events and Newtonsoft need CreateDelegate.
+		// Taking it out is what broke scripts in #3138.
+		// RELAX_REFLECTION does not. It lets transparent resource scripts invoke
+		// SecurityCritical APIs (for example Assembly.LoadFrom) and that is enough
+		// for a server to probe files on a connecting player's machine.
+		mono_security_core_clr_set_options((MonoSecurityCoreCLROptions)(MONO_SECURITY_CORE_CLR_OPTIONS_RELAX_DELEGATE));
 		mono_security_set_core_clr_platform_callback(CoreCLRIsTrustedCode);
 
 		mono_profiler_install(&s_monoProfiler, ProfilerShutDown);
